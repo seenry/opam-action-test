@@ -13,23 +13,27 @@ jobs:
         with:
           submodules: false
 
-      - name: Install OCaml
-        uses: ocaml/setup-ocaml@v3
+      - name: Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Cache Layers
+        uses: actions/cache@v4
         with:
-          ocaml-compiler: 5.3
-          dune-cache: true
-      
-      - name: Build Project
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      - name: Build Image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          tags: alpine:latest
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new
+
+      - name: Move Cache
         run: |
-          pwd
-         # opam install -y coq.8.20.1 ppx_import sexplib ppx_sexp_conv
-         # eval $(opam list)
-         # coq_makefile -f _CoqProject *.v -o Makefile
-         # make -j 4
-             
-      # - name: Compile OCaml
-      #   run: dune build --profile release
-
-      # - name: Run OCaml Tests
-      #   run: dune exec run_tests
-
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
