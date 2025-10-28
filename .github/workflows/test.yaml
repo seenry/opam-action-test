@@ -27,7 +27,6 @@ jobs:
       - name: Build Image
         uses: docker/build-push-action@v6
         with:
-          context: .
           push: false
           tags: alpine:latest
           cache-from: type=local,src=/tmp/.buildx-cache
